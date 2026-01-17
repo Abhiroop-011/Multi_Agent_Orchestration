@@ -1,0 +1,29 @@
+agents:
+  - id: coder
+    role: Python Developer
+    goal: Write a Python script for the user's task. ONLY output the code.
+    model: models/gemini-flash-latest 
+
+  - id: reviewer
+    role: Code Reviewer
+    goal: >
+      Check the code. 
+      If it is correct, output 'APPROVED'. 
+      If it has bugs or is missing imports, output 'RETRY' followed by feedback.
+      Be very strict.
+    model: models/gemini-flash-latest 
+
+workflow:
+  type: conditional
+  start_step: step_code
+  steps:
+    - id: step_code
+      agent: coder
+      next_step: step_review  
+
+    - id: step_review
+      agent: reviewer
+      conditions:
+        - target: RETRY
+          step: step_code    
+      next_step: null       
