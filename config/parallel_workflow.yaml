@@ -1,0 +1,23 @@
+agents:
+  - id: backend
+    role: Backend Engineer
+    goal: Design a Python API schema (endpoints, models) for the requested app.
+    model: models/gemini-flash-latest
+
+  - id: frontend
+    role: Frontend Engineer
+    goal: Design a React component structure for the requested app.
+    model: models/gemini-flash-latest
+
+  - id: reviewer
+    role: Tech Lead
+    goal: Review the backend and frontend proposals and merge them into a final architecture document.
+    model: models/gemini-flash-latest
+
+workflow:
+  type: parallel
+  branches:
+    - backend
+    - frontend
+  then:
+    agent: reviewer

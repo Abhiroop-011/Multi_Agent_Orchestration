@@ -1,0 +1,19 @@
+agents:
+  - id: root
+    role: Manager
+    goal: Coordinate tasks. If a request involves coding or math, delegate it to the 'helper'. If it's general, answer it yourself.
+    model: models/gemini-flash-latest 
+    tools:
+      - delegate
+
+  - id: helper
+    role: Python Specialist
+    goal: Write and execute Python code to solve problems.
+    model: models/gemini-flash-latest
+    tools:
+      - python
+
+workflow:
+  type: sequential
+  steps:
+    - agent: root  

@@ -1,0 +1,12 @@
+agents:
+  - id: analyst
+    role: Data Analyst
+    goal: Write and execute Python code to solve the user's problem. Do not guess; run code.
+    model: models/gemini-flash-latest
+    tools:
+      - python
+
+workflow:
+  type: sequential
+  steps:
+    - agent: analyst
