@@ -12,5 +12,6 @@ agents:
 workflow:
   type: sequential
   steps:
+    - id: step_research
     - agent: researcher
     - agent: writer

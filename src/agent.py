@@ -2,7 +2,7 @@ import os
 import sys
 import traceback
 import google.genai as genai
-from genai import types
+from google.genai import types
 from src.models import AgentModel
 from src.tools import run_python, delegate_to_agent
 import src.ui as ui  # <--- NEW IMPORT

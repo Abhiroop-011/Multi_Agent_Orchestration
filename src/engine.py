@@ -21,23 +21,52 @@ class Orchestrator:
         if self.config.workflow.type == "conditional":
             self._run_conditional(initial_input)
         elif self.config.workflow.type == "sequential":
-            # (Legacy support code here, or just route everything through conditional)
             self._run_sequential(initial_input)
         elif self.config.workflow.type == "parallel":
             self._run_parallel(initial_input)
 
-    def _run_conditional(self, context: str):
-        """
-        Executes a workflow by following 'next_step' pointers.
-        """
-        # 1. Build a map of step_id -> step_object for fast lookup
-        step_map = {s.id: s for s in self.config.workflow.steps}
+    def _run_sequential(self, context: str):
+        """Runs agents one after another."""
+        for step in self.config.workflow.steps:
+            agent = self.agents[step.agent]
+            ui.print_step(f"Passing context to [bold white]{agent.role}[/bold white]")
+            context = agent.execute(context)
+
+    def _run_parallel(self, context: str):
+        """Runs agents simultaneously and aggregates results."""
+        results = {}
+        ui.print_step(f"Spawning parallel agents: {self.config.workflow.branches}")
         
-        # 2. Start at the defined start_step
+        with ThreadPoolExecutor() as executor:
+            future_to_agent = {
+                executor.submit(self.agents[agent_id].execute, context): agent_id 
+                for agent_id in self.config.workflow.branches
+            }
+            
+            for future in as_completed(future_to_agent):
+                agent_id = future_to_agent[future]
+                try:
+                    output = future.result()
+                    results[agent_id] = output
+                except Exception as e:
+                    ui.print_error(f"{agent_id} failed: {e}")
+
+        ui.print_step("Aggregating results & passing to Reviewer...")
+        
+        combined_output = "Here are the proposals from the team:\n\n"
+        for agent_id, output in results.items():
+            combined_output += f"--- {agent_id.upper()} PROPOSAL ---\n{output}\n\n"
+
+        if self.config.workflow.then:
+            reviewer = self.agents[self.config.workflow.then.agent]
+            reviewer.execute(combined_output)
+
+    def _run_conditional(self, context: str):
+        """Runs agents with dynamic routing (loops/jumps)."""
+        step_map = {s.id: s for s in self.config.workflow.steps}
         current_step_id = self.config.workflow.start_step
         
-        # Safety: Prevent infinite loops
-        max_steps = 10 
+        max_steps = 15
         steps_taken = 0
         
         while current_step_id and steps_taken < max_steps:
@@ -49,18 +78,15 @@ class Orchestrator:
             agent = self.agents[step.agent]
             ui.print_step(f"Executing Step '{step.id}' (Agent: {agent.role})")
             
-            # 3. Execute Agent
-            # Note: We prepend previous context so they have memory
+            # Execute
             full_context = f"Previous Context: {context}"
             output = agent.execute(full_context)
-            context = output # Update context for next person
+            context = output 
             
             steps_taken += 1
 
-            # 4. Determine Next Step (The Routing Logic)
+            # Routing
             next_id = None
-            
-            # Check conditions first
             if step.conditions:
                 for condition in step.conditions:
                     if condition.target in output:
@@ -68,23 +94,12 @@ class Orchestrator:
                         next_id = condition.step
                         break
             
-            # If no condition met, use default next
             if not next_id:
                 next_id = step.next_step
             
-            # Move to next
             current_step_id = next_id
 
         if steps_taken >= max_steps:
-            ui.print_error("Terminated: Max steps reached (Infinite Loop Protection)")
+            ui.print_error("Terminated: Max steps reached (Loop Protection)")
         else:
             ui.print_step("Workflow Complete")
-
-    # ... (Keep _run_sequential and _run_parallel as they were)
-    def _run_sequential(self, context: str):
-        # (Paste your previous _run_sequential code here)
-        pass 
-        
-    def _run_parallel(self, context: str):
-        # (Paste your previous _run_parallel code here)
-        pass

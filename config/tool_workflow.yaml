@@ -9,4 +9,5 @@ agents:
 workflow:
   type: sequential
   steps:
+    - id: step_analyst
     - agent: analyst

@@ -13,7 +13,7 @@ def main():
         return
 
     # 2. Define the path to our YAML config
-    config_path = "config/parallel_workflow.yaml"
+    config_path = "config/supervisor_workflow.yaml"
     
     # Allow user to specify a different file via command line
     if len(sys.argv) > 1:
