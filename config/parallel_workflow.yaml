@@ -20,4 +20,5 @@ workflow:
     - backend
     - frontend
   then:
+    id: step_review
     agent: reviewer

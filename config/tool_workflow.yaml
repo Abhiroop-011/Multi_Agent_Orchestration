@@ -2,12 +2,13 @@ agents:
   - id: analyst
     role: Data Analyst
     goal: Write and execute Python code to solve the user's problem. Do not guess; run code.
-    model: models/gemini-flash-latest
+    # Make sure this matches your specific model version (e.g. gemini-1.5-flash-001)
+    model: gemini-flash-latest
     tools:
       - python
 
 workflow:
   type: sequential
   steps:
-    - id: step_analyst
-    - agent: analyst
+    - id: step_1        # <--- NEW: You must name this step
+      agent: analyst    # <--- REQUIRED: The agent to run
